@@ -63,8 +63,6 @@ jobs:
       issues: write
       pull-requests: write
       packages: write
-      checks: write
-      actions: write
 
     steps:
       - uses: actions/checkout@v3
