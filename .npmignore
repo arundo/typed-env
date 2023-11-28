@@ -10,4 +10,5 @@ test/
 .prettierrc.cjs
 tsconfig.json
 pnpm-lock.yaml
-README.md
+.github/
+CHANGELOG.md
