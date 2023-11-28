@@ -9,8 +9,7 @@
     "compile": "tsc --build tsconfig.json",
     "test": "pnpm compile && vitest",
     "bundle": "tsup src/index.ts --format cjs,esm --dts --minify --clean",
-    "release": "pnpm bundle && changeset publish",
-    "changeset": "changeset"
+    "release": "pnpm run bundle && pnpm changeset publish"
   },
   "keywords": [],
   "author": "",
