@@ -11,8 +11,15 @@
     "bundle": "tsup src/index.ts --format cjs,esm --dts --minify --clean",
     "release": "pnpm run bundle && pnpm changeset publish"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "typescript",
+    "validation",
+    "types",
+    "environment-variables",
+    "zod",
+    "env"
+  ],
+  "author": "Arundo Analytics",
   "license": "MIT",
   "peerDependencies": {
     "@types/node": "^20.10.0",
