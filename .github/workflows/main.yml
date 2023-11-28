@@ -58,6 +58,12 @@ jobs:
 
     if: github.ref == 'refs/heads/main'
 
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+
     steps:
       - uses: actions/checkout@v3
 
@@ -88,4 +94,4 @@ jobs:
         with:
           publish: pnpm release
         env:
-          GITHUB_TOKEN: ${{ secrets.PACKAGE_RW_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
