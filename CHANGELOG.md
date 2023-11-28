@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.0.6
+
+### Patch Changes
+
+- f8a951f: update peer dependencies
+
 ## 0.0.5
 
 ### Patch Changes
