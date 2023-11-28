@@ -60,3 +60,25 @@ import { environment } from './environment';
 console.log(environment.nodeEnv); // 'development' - type string
 console.log(environment.port); // 3000 - type number
 ```
+
+If you for some reason need to access the raw environment object, you can add types like this:
+
+```ts
+// environment.ts
+import { z } from 'zod';
+import { typeEnvironment } from '@arundo/typed-env';
+
+export const envSchema = z.object({
+  PORT: z.coerse.number().int().default(3000),
+});
+
+export const environment = typeEnvironment(envSchema, 'camelcase');
+
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv extends Record<keyof z.infer<typeof envSchema>, string | undefined> {}
+  }
+}
+
+console.log(process.env.PORT); // '3000' - type string | undefined
+```
