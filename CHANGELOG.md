@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.0.5
+
+### Patch Changes
+
+- 71da635: ignore more useless files in bundle
+
 ## 0.0.4
 
 ### Patch Changes
