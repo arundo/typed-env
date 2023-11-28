@@ -18,20 +18,22 @@ pnpm add @arundo/typed-env
 
 ## Usage
 
-Create a environment file with a schema and use `typeEnvironment` to create a typed environment object.
+Create a environment file with a schema and use `typeEnvironment` to create a typed environment object:
 
 ```ts
 // environment.ts
 import { z } from 'zod';
 import { typeEnvironment } from '@arundo/typed-env';
 
-export const environment = typeEnvironment(z.object({
+export const envSchema = z.object({
   NODE_ENV: z.enum(['test', 'development', 'production']),
   PORT: z.coerse.number().int().default(3000),
-}));
+});
+
+export const environment = typeEnvironment(envSchema);
 ```
 
-Import the environment object and use it.
+Import the environment object and use it:
 
 ```ts
 // server.ts
@@ -39,4 +41,22 @@ import { environment } from './environment';
 
 console.log(environment.NODE_ENV); // 'development' - type string
 console.log(environment.PORT); // 3000 - type number
+```
+
+Set naming convention of environment variables:
+
+```ts
+// environment.ts
+
+/* ... as usual ... */
+
+export const environment = typeEnvironment(envSchema, 'camelcase');
+```
+
+```ts
+// server.ts
+import { environment } from './environment';
+
+console.log(environment.nodeEnv); // 'development' - type string
+console.log(environment.port); // 3000 - type number
 ```
