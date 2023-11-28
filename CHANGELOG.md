@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.0.3
+
+### Patch Changes
+
+- 2479ab3: bump version
+
 ## 0.0.2
 
 ### Patch Changes
