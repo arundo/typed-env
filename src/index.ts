@@ -4,7 +4,7 @@ type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
   ? `${Lowercase<T>}${Capitalize<SnakeToCamelCase<U>>}`
   : Lowercase<S>;
 
-type OutputType<InputType> = { [K in keyof InputType as SnakeToCamelCase<string & K>]: InputType[K] };
+type OutputType<InputType> = { [K in keyof InputType as SnakeToCamelCase<string & K>]: InputType[K] } & {};
 
 type NamingConvention = 'camelcase' | 'default';
 
@@ -25,10 +25,6 @@ const formatError = (error: z.ZodError) =>
     .map(issue => `\n\t'${issue.path.join(',')}': ${issue.message}`)
     .join(',')}`;
 
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
 export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends NamingConvention = 'default'>(
   schema: z.Schema<TSchema>,
   transform: TTransform = 'default' as TTransform,
@@ -42,7 +38,7 @@ export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends N
         }
         return obj;
       })
-      .parse(process.env) as Prettify<EnvReturnType<typeof transform, TSchema>>;
+      .parse(process.env) as EnvReturnType<typeof transform, TSchema>;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(formatErrorFn(error));
