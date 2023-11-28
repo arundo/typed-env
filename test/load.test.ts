@@ -5,6 +5,7 @@ import { z } from 'zod';
 process.env.HOST = 'localhost';
 process.env.PORT = '3000';
 process.env.BIRTHDAY = '1990-01-01';
+process.env.DATABASE_URL_TEST = 'postgres://localhost:5432/test';
 
 test('zod schema', () => {
   const env = typeEnvironment(
@@ -17,18 +18,15 @@ test('zod schema', () => {
   });
 });
 
-test('transform function', () => {
+test('transform camelcase', () => {
   const env = typeEnvironment(
     z.object({
       PORT: z.string(),
-      HOST: z.string(),
+      DATABASE_URL_TEST: z.string(),
     }),
-    key => key.toLowerCase(),
+    'camelcase',
   );
-  expect(env).toEqual({
-    port: '3000',
-    host: 'localhost',
-  });
+  expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
 });
 
 test('coerce', () => {
