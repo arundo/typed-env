@@ -1,6 +1,6 @@
 {
-  "name": "@arunod/typed-env",
-  "version": "0.0.0",
+  "name": "@arundo/typed-env",
+  "version": "0.0.1",
   "description": "Typed environment variables made easy 🚀",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -9,6 +9,7 @@
     "compile": "tsc --build tsconfig.json",
     "test": "pnpm compile && vitest",
     "bundle": "tsup src/index.ts --format cjs,esm --dts --minify --clean",
+    "release": "pnpm bundle && changeset publish",
     "changeset": "changeset"
   },
   "keywords": [],
