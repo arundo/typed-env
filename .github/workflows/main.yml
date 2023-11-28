@@ -8,7 +8,7 @@ on:
 
 env:
   pnpm-version: 8
-  node-version: 16 # because of changesets/action we need to use node 16
+  node-version: 20
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
