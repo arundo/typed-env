@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.0.4
+
+### Patch Changes
+
+- ce032ef: trick to extract actual props of nested types
+
 ## 0.0.3
 
 ### Patch Changes
