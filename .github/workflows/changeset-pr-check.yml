@@ -1,0 +1,54 @@
+name: Changeset PR check
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  pnpm-version: 8
+  node-version: 20
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    if: ${{ !contains(github.head_ref, 'changeset-release') }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Cache pnpm modules
+        uses: actions/cache@v3.3.2
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.4.0
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v4.0.0
+        with:
+          node-version: ${{ env.node-version }}
+          cache: pnpm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Require changeset
+        run: |
+          # Checkout PR head commit instead of merge commit
+          # See: https://github.com/atlassian/changesets/issues/517
+          git checkout ${{ github.event.pull_request.head.sha }}
+          pnpm changeset status --since=origin/main
