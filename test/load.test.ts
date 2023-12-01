@@ -34,24 +34,39 @@ test('transform camelcase', () => {
       DATABASE_URL_TEST: 'postgres://localhost:5432/test',
     },
   );
-  expect((env as any).databaseUrlTest).toEqual('postgres://localhost:5432/test');
+  expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
 });
 
-test('remove vite prefix (camelcase)', () => {
-  console.log('env', 'hello');
+test('transform kebab case', () => {
   const env = typeEnvironment(
     z.object({
-      VITE_PORT: z.string(),
+      PORT: z.string(),
+      DATABASE_URL_TEST: z.string(),
+    }),
+    { transform: 'kebabcase' },
+    {
+      HOST: 'localhost',
+      PORT: '3000',
+      BIRTHDAY: '1990-01-01',
+      DATABASE_URL_TEST: 'postgres://localhost:5432/test',
+    },
+  );
+  expect(env['database-url-test']).toEqual('postgres://localhost:5432/test');
+});
+
+test('remove vite prefix (pascalcase)', () => {
+  const env = typeEnvironment(
+    z.object({
+      VITE_PORT: z.coerce.number(),
       VITE_DATABASE_URL_TEST: z.string(),
     }),
-    { transform: 'camelcase', excludePrefix: 'VITE_' },
+    { transform: 'pascalcase', excludePrefix: 'VITE' },
     {
       VITE_PORT: '4000',
       VITE_DATABASE_URL_TEST: 'postgres://localhost:5432/test',
     },
   );
-  console.log('env', env);
-  expect((env as any).databaseUrlTest).toEqual('postgres://localhost:5432/test');
+  expect(env.DatabaseUrlTest).toEqual('postgres://localhost:5432/test');
 });
 
 test('coerce', () => {
