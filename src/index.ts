@@ -1,31 +1,45 @@
 import { z } from 'zod';
+import { ChangeCase, NamingConvention } from './casings';
 
-type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
-  ? `${Lowercase<T>}${Capitalize<SnakeToCamelCase<U>>}`
-  : Lowercase<S>;
-
-type RemovePrefix<P extends string | undefined, S extends string> = P extends string
-  ? S extends `${P}${infer U}`
+type RemovePrefix<P extends string, S extends string> = P extends ''
+  ? S
+  : P extends `${infer O}_`
+  ? S extends `${O}_${infer U}`
     ? U
     : S
+  : S extends `${P}_${infer U}`
+  ? U
   : S;
-
-type OutputType<InputType, P extends string | undefined, T extends string> = {
-  [K in keyof InputType as T extends 'camelcase'
-    ? SnakeToCamelCase<RemovePrefix<P, string & K>>
-    : RemovePrefix<P, string>]: InputType[K];
-} & {};
-
-type NamingConvention = 'camelcase' | 'default';
 
 type BaseSchema = Record<string, unknown>;
 
-type EnvReturnType<T extends string, P extends string | undefined, S extends BaseSchema> = T extends 'camelcase'
-  ? OutputType<S, P, T>
-  : S;
+type EnvReturnType<TCase extends NamingConvention, P extends string, S extends BaseSchema> = {
+  [K in keyof S as ChangeCase<TCase, RemovePrefix<P, string & K>>]: S[K];
+} & {};
 
 const toCamelCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
   str.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+
+const toPascalCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
+  str.toLowerCase().replace(/(^[a-z]|_[a-z])/g, (_, letter) => {
+    return letter.startsWith('_') ? letter.replace('_', '').toUpperCase() : letter.toUpperCase();
+  });
+
+const toKebabCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
+  str.toLowerCase().replace(/_/g, '-');
+
+const getTransformFn = <TSchema extends BaseSchema>(transform: NamingConvention) => {
+  switch (transform) {
+    case 'camelcase':
+      return toCamelCase;
+    case 'pascalcase':
+      return toPascalCase;
+    case 'kebabcase':
+      return toKebabCase;
+    default:
+      return (str: string & keyof TSchema) => str;
+  }
+};
 
 const transformKeys =
   <TSchema extends BaseSchema>(transformFn: (str: keyof TSchema) => keyof TSchema) =>
@@ -48,50 +62,47 @@ const getEnvironment = () => {
 };
 
 const removePrefix =
-  (prefix: string) =>
+  (prefix?: string) =>
   <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
-    str.replace(prefix, '');
+    prefix ? (prefix.endsWith('_') ? str.replace(prefix, '') : str.replace(`${prefix}_`, '')) : str;
 
 const removePrefixDecorator =
-  (prefix: string) =>
+  (prefix?: string) =>
   (transform: <TSchema extends BaseSchema>(str: string & keyof TSchema) => string) =>
   <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
     transform(removePrefix(prefix)(str));
 
-interface Options<TTransform> {
+type Options<TTransform, TPrefixRemoval> = {
   transform?: TTransform;
   formatErrorFn?: (error: z.ZodError) => string;
-  excludePrefix?: string;
-}
+  excludePrefix?: TPrefixRemoval;
+};
 
-export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends NamingConvention = 'default'>(
+export const typeEnvironment = <
+  TSchema extends BaseSchema,
+  TTransform extends NamingConvention = 'default',
+  TPrefixRemoval extends string = '',
+>(
   schema: z.Schema<TSchema>,
-  options: Options<TTransform> = {
-    transform: 'default' as TTransform,
-    formatErrorFn: formatError,
-    excludePrefix: '',
-  },
+  {
+    transform = 'default' as TTransform,
+    formatErrorFn = formatError,
+    excludePrefix = '' as TPrefixRemoval,
+  }: Options<TTransform, TPrefixRemoval>,
   overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
-  const { transform = 'default', formatErrorFn = formatError } = options ?? {};
-  const prefix = options?.excludePrefix ?? '';
-  const removePrefixWrapper = removePrefixDecorator(prefix);
+  const removePrefixWrapper = removePrefixDecorator(excludePrefix);
   try {
-    return schema
+    const returnobj = schema
       .transform((obj: TSchema) => {
-        console.log('help', obj);
-        if (transform === 'camelcase') {
-          const obj2 = transformKeys(removePrefixWrapper(toCamelCase))(obj);
-          return obj2;
-        }
-        console.log('help2', obj);
-        return obj;
+        console.log('transform', transform);
+        const loff = transformKeys(removePrefixWrapper(getTransformFn(transform)))(obj);
+        console.log('loff', loff);
+        return loff;
       })
-      .parse(overrideEnv) as EnvReturnType<
-      NonNullable<typeof options.transform>,
-      typeof options.excludePrefix,
-      TSchema
-    >;
+      .parse(overrideEnv) as EnvReturnType<NonNullable<typeof transform>, NonNullable<typeof excludePrefix>, TSchema>;
+    console.log('transform', JSON.stringify(transform));
+    return returnobj;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(formatErrorFn(error));

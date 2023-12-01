@@ -35,8 +35,24 @@ test('transform camelcase', () => {
   expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
 });
 
+test('transform kebab case', () => {
+  const env = typeEnvironment(
+    z.object({
+      PORT: z.string(),
+      DATABASE_URL_TEST: z.string(),
+    }),
+    { transform: 'kebabcase' },
+    {
+      HOST: 'localhost',
+      PORT: '3000',
+      BIRTHDAY: '1990-01-01',
+      DATABASE_URL_TEST: 'postgres://localhost:5432/test',
+    },
+  );
+  expect(env['database-url-test']).toEqual('postgres://localhost:5432/test');
+});
+
 test('remove vite prefix (camelcase)', () => {
-  console.log('env', 'hello');
   const env = typeEnvironment(
     z.object({
       VITE_PORT: z.string(),
