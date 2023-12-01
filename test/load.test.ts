@@ -42,12 +42,7 @@ test('transform kebab case', () => {
       DATABASE_URL_TEST: z.string(),
     }),
     { transform: 'kebabcase' },
-    {
-      HOST: 'localhost',
-      PORT: '3000',
-      BIRTHDAY: '1990-01-01',
-      DATABASE_URL_TEST: 'postgres://localhost:5432/test',
-    },
+    overrideEnv,
   );
   expect(env['database-url-test']).toEqual('postgres://localhost:5432/test');
 });

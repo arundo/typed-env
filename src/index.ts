@@ -88,7 +88,7 @@ export const typeEnvironment = <
     transform = 'default' as TTransform,
     formatErrorFn = formatError,
     excludePrefix = '' as TPrefixRemoval,
-  }: Options<TTransform, TPrefixRemoval>,
+  }: Options<TTransform, TPrefixRemoval> = {},
   overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
   const removePrefixWrapper = removePrefixDecorator(excludePrefix);
