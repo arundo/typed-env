@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc --build tsconfig.json",
-    "test": "pnpm compile && vitest --silent=false",
+    "test": "pnpm compile && vitest",
     "bundle": "tsup src/index.ts --format cjs,esm --dts --minify --clean",
     "release": "pnpm run bundle && pnpm changeset publish"
   },
