@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.0.7
+
+### Patch Changes
+
+- e35641b: support vite
+
 ## 0.0.6
 
 ### Patch Changes
