@@ -95,13 +95,9 @@ export const typeEnvironment = <
   try {
     const returnobj = schema
       .transform((obj: TSchema) => {
-        console.log('transform', transform);
-        const loff = transformKeys(removePrefixWrapper(getTransformFn(transform)))(obj);
-        console.log('loff', loff);
-        return loff;
+        return transformKeys(removePrefixWrapper(getTransformFn(transform)))(obj);
       })
       .parse(overrideEnv) as EnvReturnType<NonNullable<typeof transform>, NonNullable<typeof excludePrefix>, TSchema>;
-    console.log('transform', JSON.stringify(transform));
     return returnobj;
   } catch (error) {
     if (error instanceof z.ZodError) {
