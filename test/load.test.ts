@@ -36,6 +36,7 @@ test('transform camelcase', () => {
 });
 
 test('remove vite prefix (camelcase)', () => {
+  console.log('env', 'hello');
   const env = typeEnvironment(
     z.object({
       VITE_PORT: z.string(),
