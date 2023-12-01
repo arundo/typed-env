@@ -5,7 +5,7 @@ type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
   : Lowercase<S>;
 
 type RemovePrefix<P extends string | undefined, S extends string> = P extends string
-  ? S extends `${P}_${infer U}`
+  ? S extends `${P}${infer U}`
     ? U
     : S
   : S;
@@ -79,9 +79,12 @@ export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends N
   try {
     return schema
       .transform((obj: TSchema) => {
+        console.log('help', obj);
         if (transform === 'camelcase') {
-          return transformKeys(removePrefixWrapper(toCamelCase))(obj);
+          const obj2 = transformKeys(removePrefixWrapper(toCamelCase))(obj);
+          return obj2;
         }
+        console.log('help2', obj);
         return obj;
       })
       .parse(overrideEnv) as EnvReturnType<
