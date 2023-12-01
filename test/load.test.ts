@@ -35,8 +35,7 @@ test('remove vite prefix (camelcase)', () => {
       VITE_PORT: z.string(),
       VITE_DATABASE_URL_TEST: z.string(),
     }),
-    'camelcase',
-    'VITE',
+    { transform: 'camelcase', excludePrefix: 'VITE' },
   );
   expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
 });

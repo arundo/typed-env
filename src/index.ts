@@ -4,9 +4,13 @@ type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
   ? `${Lowercase<T>}${Capitalize<SnakeToCamelCase<U>>}`
   : Lowercase<S>;
 
-type RemovePrefix<P extends string, S extends string> = S extends `${P}_${infer U}` ? U : S;
+type RemovePrefix<P extends string | undefined, S extends string> = P extends string
+  ? S extends `${P}_${infer U}`
+    ? U
+    : S
+  : S;
 
-type OutputType<InputType, P extends string, T extends string> = {
+type OutputType<InputType, P extends string | undefined, T extends string> = {
   [K in keyof InputType as T extends 'camelcase'
     ? SnakeToCamelCase<RemovePrefix<P, string & K>>
     : RemovePrefix<P, string>]: InputType[K];
@@ -16,7 +20,7 @@ type NamingConvention = 'camelcase' | 'default';
 
 type BaseSchema = Record<string, unknown>;
 
-type EnvReturnType<T extends string, P extends string, S extends BaseSchema> = T extends 'camelcase'
+type EnvReturnType<T extends string, P extends string | undefined, S extends BaseSchema> = T extends 'camelcase'
   ? OutputType<S, P, T>
   : S;
 
@@ -60,15 +64,17 @@ interface Options<TTransform> {
   excludePrefix?: string;
 }
 
-export const typeEnvironment = <TSchema extends BaseSchema>(
+export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends NamingConvention = 'default'>(
   schema: z.Schema<TSchema>,
-  transform: NamingConvention = 'default',
-  excludePrefix: string = '',
-  formatErrorFn: (error: z.ZodError) => string = formatError,
+  options: Options<TTransform> = {
+    transform: 'default' as TTransform,
+    formatErrorFn: formatError,
+    excludePrefix: '',
+  },
   overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
-  // const { transform = 'default', formatErrorFn = formatError } = options ?? {};
-  const prefix = excludePrefix ?? '';
+  const { transform = 'default', formatErrorFn = formatError } = options ?? {};
+  const prefix = options?.excludePrefix ?? '';
   const removePrefixWrapper = removePrefixDecorator(prefix);
   try {
     return schema
@@ -78,7 +84,11 @@ export const typeEnvironment = <TSchema extends BaseSchema>(
         }
         return obj;
       })
-      .parse(overrideEnv) as EnvReturnType<NonNullable<typeof transform>, NonNullable<typeof excludePrefix>, TSchema>;
+      .parse(overrideEnv) as EnvReturnType<
+      NonNullable<typeof options.transform>,
+      typeof options.excludePrefix,
+      TSchema
+    >;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(formatErrorFn(error));
