@@ -4,13 +4,21 @@ type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
   ? `${Lowercase<T>}${Capitalize<SnakeToCamelCase<U>>}`
   : Lowercase<S>;
 
-type OutputType<InputType> = { [K in keyof InputType as SnakeToCamelCase<string & K>]: InputType[K] } & {};
+type RemovePrefix<P extends string, S extends string> = S extends `${P}_${infer U}` ? U : S;
+
+type OutputType<InputType, P extends string, T extends string> = {
+  [K in keyof InputType as T extends 'camelcase'
+    ? SnakeToCamelCase<RemovePrefix<P, string & K>>
+    : RemovePrefix<P, string>]: InputType[K];
+} & {};
 
 type NamingConvention = 'camelcase' | 'default';
 
 type BaseSchema = Record<string, unknown>;
 
-type EnvReturnType<T, S extends BaseSchema> = T extends 'camelcase' ? OutputType<S> : S;
+type EnvReturnType<T extends string, P extends string, S extends BaseSchema> = T extends 'camelcase'
+  ? OutputType<S, P, T>
+  : S;
 
 const toCamelCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
   str.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -46,17 +54,21 @@ const removePrefixDecorator =
   <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
     removePrefix(prefix)(transform(str));
 
-export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends NamingConvention = 'default'>(
+interface Options<TTransform> {
+  transform?: TTransform;
+  formatErrorFn?: (error: z.ZodError) => string;
+  excludePrefix?: string;
+}
+
+export const typeEnvironment = <TSchema extends BaseSchema>(
   schema: z.Schema<TSchema>,
-  options: { transform?: TTransform; formatErrorFn?: (error: z.ZodError) => string; excludePrefix?: string } = {
-    transform: 'default' as TTransform,
-    formatErrorFn: formatError,
-    excludePrefix: '',
-  },
+  transform: NamingConvention = 'default',
+  excludePrefix: string = '',
+  formatErrorFn: (error: z.ZodError) => string = formatError,
   overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
-  const { transform = 'default', formatErrorFn = formatError } = options ?? {};
-  const prefix = options?.excludePrefix ?? '';
+  // const { transform = 'default', formatErrorFn = formatError } = options ?? {};
+  const prefix = excludePrefix ?? '';
   const removePrefixWrapper = removePrefixDecorator(prefix);
   try {
     return schema
@@ -66,7 +78,7 @@ export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends N
         }
         return obj;
       })
-      .parse(overrideEnv) as EnvReturnType<typeof options.transform, TSchema>;
+      .parse(overrideEnv) as EnvReturnType<NonNullable<typeof transform>, NonNullable<typeof excludePrefix>, TSchema>;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(formatErrorFn(error));
