@@ -29,6 +29,18 @@ test('transform camelcase', () => {
   expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
 });
 
+test('remove vite prefix (camelcase)', () => {
+  const env = typeEnvironment(
+    z.object({
+      VITE_PORT: z.string(),
+      VITE_DATABASE_URL_TEST: z.string(),
+    }),
+    'camelcase',
+    'VITE',
+  );
+  expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
+});
+
 test('coerce', () => {
   const env = typeEnvironment(
     z.object({
