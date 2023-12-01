@@ -56,7 +56,7 @@ const removePrefixDecorator =
   (prefix: string) =>
   (transform: <TSchema extends BaseSchema>(str: string & keyof TSchema) => string) =>
   <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
-    removePrefix(prefix)(transform(str));
+    transform(removePrefix(prefix)(str));
 
 interface Options<TTransform> {
   transform?: TTransform;
