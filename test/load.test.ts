@@ -24,7 +24,7 @@ test('transform camelcase', () => {
       PORT: z.string(),
       DATABASE_URL_TEST: z.string(),
     }),
-    'camelcase',
+    { transform: 'camelcase' },
   );
   expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
 });
