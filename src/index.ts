@@ -12,7 +12,7 @@ type BaseSchema = Record<string, unknown>;
 
 type EnvReturnType<T, S extends BaseSchema> = T extends 'camelcase' ? OutputType<S> : S;
 
-const toCamelCase = <TSchema extends BaseSchema>(str: string & keyof TSchema) =>
+const toCamelCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
   str.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 
 const transformKeys =
@@ -25,20 +25,48 @@ const formatError = (error: z.ZodError) =>
     .map(issue => `\n\t'${issue.path.join(',')}': ${issue.message}`)
     .join(',')}`;
 
+const getEnvironment = () => {
+  if ((import.meta as any)?.env !== undefined) {
+    return (import.meta as any).env;
+  }
+  if (process.env !== undefined) {
+    return process.env;
+  }
+  throw new Error('Failed to get environment object');
+};
+
+const removePrefix =
+  (prefix: string) =>
+  <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
+    str.replace(prefix, '');
+
+const removePrefixDecorator =
+  (prefix: string) =>
+  (transform: <TSchema extends BaseSchema>(str: string & keyof TSchema) => string) =>
+  <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
+    removePrefix(prefix)(transform(str));
+
 export const typeEnvironment = <TSchema extends BaseSchema, TTransform extends NamingConvention = 'default'>(
   schema: z.Schema<TSchema>,
-  transform: TTransform = 'default' as TTransform,
-  formatErrorFn: (error: z.ZodError) => string = formatError,
+  options: { transform?: TTransform; formatErrorFn?: (error: z.ZodError) => string; excludePrefix?: string } = {
+    transform: 'default' as TTransform,
+    formatErrorFn: formatError,
+    excludePrefix: '',
+  },
+  overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
+  const { transform = 'default', formatErrorFn = formatError } = options ?? {};
+  const prefix = options?.excludePrefix ?? '';
+  const removePrefixWrapper = removePrefixDecorator(prefix);
   try {
     return schema
       .transform((obj: TSchema) => {
         if (transform === 'camelcase') {
-          return transformKeys(toCamelCase)(obj);
+          return transformKeys(removePrefixWrapper(toCamelCase))(obj);
         }
         return obj;
       })
-      .parse(process.env) as EnvReturnType<typeof transform, TSchema>;
+      .parse(overrideEnv) as EnvReturnType<typeof options.transform, TSchema>;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(formatErrorFn(error));
