@@ -2,16 +2,21 @@ import { test, expect } from 'vitest';
 import { typeEnvironment } from '../src';
 import { z } from 'zod';
 
-process.env.HOST = 'localhost';
-process.env.PORT = '3000';
-process.env.BIRTHDAY = '1990-01-01';
-process.env.DATABASE_URL_TEST = 'postgres://localhost:5432/test';
+const overrideEnv = {
+  HOST: 'localhost',
+  PORT: '3000',
+  BIRTHDAY: '1990-01-01',
+  DATABASE_URL_TEST: 'postgres://localhost:5432/test',
+  NODE_ENV: 'test',
+};
 
 test('zod schema', () => {
   const env = typeEnvironment(
     z.object({
       HOST: z.string(),
     }),
+    undefined,
+    overrideEnv,
   );
   expect(env).toEqual({
     HOST: 'localhost',
@@ -25,6 +30,7 @@ test('transform camelcase', () => {
       DATABASE_URL_TEST: z.string(),
     }),
     { transform: 'camelcase' },
+    overrideEnv,
   );
   expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
 });
@@ -35,9 +41,14 @@ test('remove vite prefix (camelcase)', () => {
       VITE_PORT: z.string(),
       VITE_DATABASE_URL_TEST: z.string(),
     }),
-    { transform: 'camelcase', excludePrefix: 'VITE' },
+    { transform: 'camelcase', excludePrefix: 'VITE_' },
+    {
+      VITE_PORT: overrideEnv.PORT,
+      VITE_DATABASE_URL_TEST: overrideEnv.DATABASE_URL_TEST,
+    },
   );
   expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
+  expect(env.port).toEqual('3000');
 });
 
 test('coerce', () => {
@@ -47,6 +58,8 @@ test('coerce', () => {
       BIRTHDAY: z.coerce.date(),
       NODE_ENV: z.enum(['test', 'development', 'production']),
     }),
+    undefined,
+    overrideEnv,
   );
   expect(env).toEqual({
     PORT: 3000,
@@ -63,6 +76,8 @@ test('validation failed', () => {
         KRØLL: z.number(),
         BALL: z.number(),
       }),
+      undefined,
+      overrideEnv,
     ),
   ).toThrow(
     "Environment variable validation failed:\n\t'HOST': Expected number, received string,\n\t'KRØLL': Required,\n\t'BALL': Required",
