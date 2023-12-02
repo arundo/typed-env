@@ -80,7 +80,7 @@ type Options<TTransform, TPrefixRemoval> = {
 
 export const typeEnvironment = <
   TSchema extends BaseSchema,
-  TTransform extends NamingConvention = 'default',
+  TTransform extends NamingConvention,
   TPrefixRemoval extends string = '',
 >(
   schema: z.Schema<TSchema>,
