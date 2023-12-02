@@ -12,10 +12,12 @@ export type SnakeToKebabCase<S extends string> = S extends `${infer T}_${infer U
   ? `${Lowercase<T>}-${Lowercase<SnakeToKebabCase<U>>}`
   : Lowercase<S>;
 
-export type ChangeCase<T extends NamingConvention, S extends string> = T extends 'camelcase'
+export type ChangeCase<T extends NamingConvention, S extends string> = 'default' extends T
+  ? S
+  : 'camelcase' extends T
   ? SnakeToCamelCase<S>
-  : T extends 'pascalcase'
+  : 'pascalcase' extends T
   ? SnakeToPascalCase<S>
-  : T extends 'kebabcase'
+  : 'kebabcase' extends T
   ? SnakeToKebabCase<S>
   : S;
