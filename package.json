@@ -1,6 +1,6 @@
 {
   "name": "@arundo/typed-env",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Typed environment variables made easy 🚀",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

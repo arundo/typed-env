@@ -1,5 +1,12 @@
 # @arunod/typed-env
 
+## 0.0.8
+
+### Patch Changes
+
+- f857d6b: Add ability to remove prefixes from environment variables + types
+- b4baf9f: Fixed typing on the transform property
+
 ## 0.0.7
 
 ### Patch Changes
