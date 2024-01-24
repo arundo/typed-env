@@ -8,6 +8,9 @@ dependencies:
   '@types/node':
     specifier: '>=14.0.0'
     version: 20.10.0
+  string-ts:
+    specifier: ^2.0.0
+    version: 2.0.0
   zod:
     specifier: '>=3.0.0'
     version: 3.22.4
@@ -2092,6 +2095,10 @@ packages:
     dependencies:
       mixme: 0.5.10
     dev: true
+
+  /string-ts@2.0.0:
+    resolution: {integrity: sha512-Q+WJ5tQ0AdCeWgbhe3ZqDw1v5DGac5/lmDVNbJIa/bFR7TGfB8nJ1rHQSqinZHB8wKetUfhQlfR89puRcIKZZw==}
+    dev: false
 
   /string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
