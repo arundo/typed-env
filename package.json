@@ -17,9 +17,24 @@
     "types",
     "environment-variables",
     "zod",
-    "env"
+    "env",
+    "transform"
   ],
-  "author": "Arundo Analytics",
+  "homepage": "https://github.com/arundo/typed-env",
+  "bugs": {
+    "url": "https://github.com/arundo/typed-env/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/arundo/typed-env.git"
+  },
+  "author": {
+    "name": "Arundo Analytics",
+    "url": "https://arundo.com"
+  },
+  "files": [
+    "dist/"
+  ],
   "license": "MIT",
   "peerDependencies": {
     "@types/node": ">=14.0.0",
@@ -33,5 +48,8 @@
   },
   "dependencies": {
     "string-ts": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
