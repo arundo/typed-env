@@ -71,7 +71,7 @@ export const typeEnvironment = <
       ? DeepPascalKeys<PrefixRemoved>
       : TTransform extends 'kebabcase'
       ? DeepKebabKeys<PrefixRemoved>
-      : typeof prefixRemoved;
+      : PrefixRemoved;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(formatErrorFn(error));
