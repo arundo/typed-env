@@ -1,52 +1,8 @@
-import { z } from 'zod';
-import { ChangeCase, NamingConvention } from './casings';
+import { ZodTypeAny, ZodError } from 'zod';
+import { replace, camelKeys, pascalKeys, kebabKeys, constantKeys, Replace } from 'string-ts';
+import { ConditionalType, NamingConvention, Options, PrefixRemoved } from './contracts';
 
-type RemovePrefix<P extends string, S extends string> = P extends ''
-  ? S
-  : P extends `${infer O}_`
-  ? S extends `${O}_${infer U}`
-    ? U
-    : S
-  : S extends `${P}_${infer U}`
-  ? U
-  : S;
-
-type BaseSchema = Record<string, unknown>;
-
-type EnvReturnType<TCase extends NamingConvention, P extends string, S extends BaseSchema> = {
-  [K in keyof S as ChangeCase<TCase, RemovePrefix<P, string & K>>]: S[K];
-} & {};
-
-const toCamelCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
-  str.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-
-const toPascalCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
-  str.toLowerCase().replace(/(^[a-z]|_[a-z])/g, (_, letter) => {
-    return letter.startsWith('_') ? letter.replace('_', '').toUpperCase() : letter.toUpperCase();
-  });
-
-const toKebabCase = <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
-  str.toLowerCase().replace(/_/g, '-');
-
-const getTransformFn = <TSchema extends BaseSchema>(transform: NamingConvention) => {
-  switch (transform) {
-    case 'camelcase':
-      return toCamelCase;
-    case 'pascalcase':
-      return toPascalCase;
-    case 'kebabcase':
-      return toKebabCase;
-    default:
-      return (str: string & keyof TSchema) => str;
-  }
-};
-
-const transformKeys =
-  <TSchema extends BaseSchema>(transformFn: (str: keyof TSchema) => keyof TSchema) =>
-  (obj: TSchema) =>
-    Object.fromEntries(Object.entries(obj).map(([key, value]) => [transformFn(key), value])) as TSchema;
-
-const formatError = (error: z.ZodError) =>
+const formatError = (error: ZodError) =>
   `Environment variable validation failed:${error.issues
     .map(issue => `\n\t'${issue.path.join(',')}': ${issue.message}`)
     .join(',')}`;
@@ -61,47 +17,62 @@ const getEnvironment = () => {
   throw new Error('Failed to get environment object');
 };
 
-const removePrefix =
-  (prefix?: string) =>
-  <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
-    prefix ? (prefix.endsWith('_') ? str.replace(prefix, '') : str.replace(`${prefix}_`, '')) : str;
+export function removePrefix<T extends Record<string, unknown>, L extends string>(obj: T, prefix: L) {
+  if (!prefix) {
+    return obj;
+  }
 
-const removePrefixDecorator =
-  (prefix?: string) =>
-  (transform: <TSchema extends BaseSchema>(str: string & keyof TSchema) => string) =>
-  <TSchema extends BaseSchema>(str: string & keyof TSchema): string =>
-    transform(removePrefix(prefix)(str));
+  const res: Record<string, unknown> = {};
 
-type Options<TTransform, TPrefixRemoval> = {
-  transform?: TTransform;
-  formatErrorFn?: (error: z.ZodError) => string;
-  excludePrefix?: TPrefixRemoval;
+  for (const key in obj) {
+    const transformedKey = prefix
+      ? prefix.endsWith('_')
+        ? replace(key, prefix, '')
+        : replace(key, `${prefix}_`, '')
+      : key;
+    res[transformedKey] = obj[key];
+  }
+  return res as {
+    [K in Extract<keyof T, string> as Replace<Extract<keyof T, string>, L, ''>]: T[K];
+  };
+}
+
+const changeCase = <TTransform extends NamingConvention | undefined, TSchema>(
+  transform: TTransform,
+  schema: TSchema,
+) => {
+  switch (transform) {
+    case 'camelcase':
+      return camelKeys(schema);
+    case 'pascalcase':
+      return pascalKeys(schema);
+    case 'kebabcase':
+      return kebabKeys(schema);
+    case 'constantcase':
+    default:
+      return constantKeys(schema);
+  }
 };
 
 export const typeEnvironment = <
-  TSchema extends BaseSchema,
+  TSchema extends ZodTypeAny,
   TTransform extends NamingConvention,
   TPrefixRemoval extends string = '',
 >(
-  schema: z.Schema<TSchema>,
-  {
-    transform = 'default' as TTransform,
-    formatErrorFn = formatError,
-    excludePrefix = '' as TPrefixRemoval,
-  }: Options<TTransform, TPrefixRemoval> = {},
+  schema: TSchema,
+  options: Options<TTransform, TPrefixRemoval> = {},
   overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
-  const removePrefixWrapper = removePrefixDecorator(excludePrefix);
+  const { transform = 'default', formatErrorFn = formatError, excludePrefix = '' as TPrefixRemoval } = options;
+
   try {
-    const returnobj = schema
-      .transform((obj: TSchema) => {
-        return transformKeys(removePrefixWrapper(getTransformFn(transform)))(obj);
-      })
-      .parse(overrideEnv) as EnvReturnType<NonNullable<typeof transform>, NonNullable<typeof excludePrefix>, TSchema>;
-    return returnobj;
+    const parsed = schema.parse(overrideEnv);
+    type TSchemaOutput = TSchema['_output'];
+    const prefixRemoved = removePrefix(parsed, excludePrefix) as PrefixRemoved<TSchemaOutput, TPrefixRemoval>;
+    return changeCase(transform, prefixRemoved) as ConditionalType<TTransform, typeof prefixRemoved>;
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Error(formatErrorFn(error));
+    if (error instanceof ZodError) {
+      throw new Error(formatErrorFn ? formatErrorFn(error) : formatError(error));
     }
     throw new Error('Environment variable validation failed');
   }

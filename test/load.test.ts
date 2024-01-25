@@ -13,7 +13,7 @@ const overrideEnv = {
 test('zod schema', () => {
   const env = typeEnvironment(
     z.object({
-      HOST: z.string(),
+      HOST: z.string().default('localhost'),
     }),
     undefined,
     overrideEnv,

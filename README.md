@@ -50,7 +50,7 @@ Set naming convention of environment variables:
 
 /* ... as usual ... */
 
-export const environment = typeEnvironment(envSchema, 'camelcase');
+export const environment = typeEnvironment(envSchema, { transform: 'camelcase' });
 ```
 
 ```ts
@@ -72,7 +72,7 @@ export const envSchema = z.object({
   PORT: z.coerse.number().int().default(3000),
 });
 
-export const environment = typeEnvironment(envSchema, 'camelcase');
+export const environment = typeEnvironment(envSchema, { transform: 'camelcase' });
 
 declare global {
   namespace NodeJS {
