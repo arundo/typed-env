@@ -29,7 +29,7 @@ const changeCase = <TTransform extends NamingConvention, TSchema extends BaseSch
       return deepPascalKeys(schema);
     case 'kebabcase':
       return deepKebabKeys(schema);
-    case 'default':
+    case 'constantcase':
     default:
       return deepConstantKeys(schema);
   }
@@ -50,12 +50,12 @@ const removePrefixes = <TSchema extends BaseSchema, TPrefixRemoval extends strin
 
 export const typeEnvironment = <
   TSchema extends BaseSchema,
-  TTransform extends NamingConvention = 'default',
+  TTransform extends NamingConvention = 'constantcase',
   TPrefixRemoval extends string = '',
 >(
   schema: Schema<TSchema>,
   {
-    transform = 'default' as TTransform,
+    transform = 'constantcase' as TTransform,
     formatErrorFn = formatError,
     excludePrefix = '' as TPrefixRemoval,
   }: Options<TTransform, TPrefixRemoval> = {},
