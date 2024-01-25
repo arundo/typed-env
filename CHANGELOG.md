@@ -1,5 +1,15 @@
 # @arunod/typed-env
 
+## 0.1.0
+
+### Minor Changes
+
+- b671288: Use strings-ts to simplify the package.
+
+### Patch Changes
+
+- b671288: Types of the resolved environment is now the output of schema parse and not the input.
+
 ## 0.0.8
 
 ### Patch Changes
