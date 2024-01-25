@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { replace, deepCamelKeys, deepPascalKeys, deepKebabKeys, Replace, DeepCamelKeys, DeepPascalKeys, DeepKebabKeys } from 'string-ts';
+import {
+  replace,
+  deepCamelKeys,
+  deepPascalKeys,
+  deepKebabKeys,
+  Replace,
+  DeepCamelKeys,
+  DeepPascalKeys,
+  DeepKebabKeys,
+} from 'string-ts';
 import { deepTransformKeys } from './utils';
 import { NamingConvention } from './contracts';
 
@@ -26,8 +35,8 @@ type Options<TTransform, TPrefixRemoval> = {
   excludePrefix?: TPrefixRemoval;
 };
 
-const removePrefix = (str: string, prefix: string) =>  prefix ? (prefix.endsWith('_') ? str.replace(prefix, '') : str.replace(`${prefix}_`, '')) : str
-
+const removePrefix = (str: string, prefix: string) =>
+  prefix ? (prefix.endsWith('_') ? replace(str, prefix, '') : replace(str, `${prefix}_`, '')) : str;
 
 export const typeEnvironment = <
   TSchema extends BaseSchema,
@@ -38,25 +47,31 @@ export const typeEnvironment = <
   {
     transform = 'default' as TTransform,
     formatErrorFn = formatError,
-    excludePrefix,
+    excludePrefix = '' as TPrefixRemoval,
   }: Options<TTransform, TPrefixRemoval> = {},
   overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
   try {
     const parsed = schema.parse(overrideEnv);
-    const prefixRemoved = excludePrefix ? deepTransformKeys(parsed, (str) => removePrefix(str, excludePrefix)) as {
-      [key in keyof TSchema as key extends string ? Replace<key , TPrefixRemoval, ''> : never]: TSchema[key];
-    }: parsed;
-
+    const prefixRemoved = deepTransformKeys(parsed, str => removePrefix(str, excludePrefix)) as {
+      [key in keyof TSchema as key extends string ? Replace<key, TPrefixRemoval, ''> : never]: TSchema[key];
+    };
+    type PrefixRemoved = typeof prefixRemoved;
     const transformers = {
-      camelcase: deepCamelKeys<typeof prefixRemoved>,
-      pascalcase: deepPascalKeys<typeof prefixRemoved>,
-      kebabcase: deepKebabKeys<typeof prefixRemoved>,
-      default: (obj: typeof prefixRemoved) => obj,
+      camelcase: deepCamelKeys<PrefixRemoved>,
+      pascalcase: deepPascalKeys<PrefixRemoved>,
+      kebabcase: deepKebabKeys<PrefixRemoved>,
+      default: (obj: PrefixRemoved) => obj,
     };
 
     const transformFn = transformers[transform];
-    return transformFn(prefixRemoved) as TTransform extends 'camelcase' ? DeepCamelKeys<typeof prefixRemoved> : TTransform extends 'pascalcase' ? DeepPascalKeys<typeof prefixRemoved> : TTransform extends 'kebabcase' ? DeepKebabKeys<typeof prefixRemoved> : typeof prefixRemoved;
+    return transformFn(prefixRemoved) as TTransform extends 'camelcase'
+      ? DeepCamelKeys<PrefixRemoved>
+      : TTransform extends 'pascalcase'
+      ? DeepPascalKeys<PrefixRemoved>
+      : TTransform extends 'kebabcase'
+      ? DeepKebabKeys<PrefixRemoved>
+      : typeof prefixRemoved;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(formatErrorFn(error));

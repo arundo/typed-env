@@ -59,7 +59,6 @@ test('remove vite prefix (camelcase)', () => {
       VITE_DATABASE_URL_TEST: overrideEnv.DATABASE_URL_TEST,
     },
   );
-  console.log(env);
   expect(env.databaseUrlTest).toEqual('postgres://localhost:5432/test');
   expect(env.port).toEqual('3000');
 });
