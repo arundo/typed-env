@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
-import { DeepCamelKeys, DeepPascalKeys, DeepKebabKeys, Replace } from 'string-ts';
+import { Replace, CamelKeys, ConstantKeys, KebabKeys, PascalKeys } from 'string-ts';
 
-export type NamingConvention = 'camelcase' | 'pascalcase' | 'kebabcase' | 'constantcase';
+export type NamingConvention = 'camelcase' | 'pascalcase' | 'kebabcase' | 'constantcase' | 'default';
 
 export type BaseSchema = Record<string, unknown>;
 
@@ -14,15 +14,17 @@ export type Options<TTransform, TPrefixRemoval> = {
 export type ConditionalType<
   TTransform extends NamingConvention,
   TSchema extends BaseSchema,
-> = TTransform extends 'camelcase'
-  ? DeepCamelKeys<TSchema>
-  : TTransform extends 'pascalcase'
-  ? DeepPascalKeys<TSchema>
-  : TTransform extends 'kebabcase'
-  ? DeepKebabKeys<TSchema>
-  : TTransform extends 'constantcase'
+> = 'default' extends TTransform
   ? TSchema
-  : TSchema;
+  : 'constantcase' extends TTransform
+  ? ConstantKeys<TSchema>
+  : 'camelcase' extends TTransform
+  ? CamelKeys<TSchema>
+  : 'pascalcase' extends TTransform
+  ? PascalKeys<TSchema>
+  : 'kebabcase' extends TTransform
+  ? KebabKeys<TSchema>
+  : never;
 
 export type PrefixRemoved<TSchema extends BaseSchema, TPrefixRemoval extends string> = {
   [key in keyof TSchema as key extends string ? Replace<key, TPrefixRemoval, ''> : never]: TSchema[key];
