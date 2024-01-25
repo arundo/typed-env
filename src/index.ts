@@ -1,20 +1,9 @@
-import { z } from 'zod';
-import {
-  replace,
-  deepCamelKeys,
-  deepPascalKeys,
-  deepKebabKeys,
-  Replace,
-  DeepCamelKeys,
-  DeepPascalKeys,
-  DeepKebabKeys,
-} from 'string-ts';
+import { ZodError, Schema } from 'zod';
+import { replace, deepCamelKeys, deepPascalKeys, deepKebabKeys, deepConstantKeys } from 'string-ts';
 import { deepTransformKeys } from './utils';
-import { NamingConvention } from './contracts';
+import { BaseSchema, ConditionalType, NamingConvention, Options, PrefixRemoved } from './contracts';
 
-type BaseSchema = Record<string, unknown>;
-
-const formatError = (error: z.ZodError) =>
+const formatError = (error: ZodError) =>
   `Environment variable validation failed:${error.issues
     .map(issue => `\n\t'${issue.path.join(',')}': ${issue.message}`)
     .join(',')}`;
@@ -29,21 +18,42 @@ const getEnvironment = () => {
   throw new Error('Failed to get environment object');
 };
 
-type Options<TTransform, TPrefixRemoval> = {
-  transform?: TTransform;
-  formatErrorFn?: (error: z.ZodError) => string;
-  excludePrefix?: TPrefixRemoval;
+const changeCase = <TTransform extends NamingConvention, TSchema extends BaseSchema>(
+  transform: TTransform,
+  schema: TSchema,
+) => {
+  switch (transform) {
+    case 'camelcase':
+      return deepCamelKeys(schema);
+    case 'pascalcase':
+      return deepPascalKeys(schema);
+    case 'kebabcase':
+      return deepKebabKeys(schema);
+    case 'default':
+    default:
+      return deepConstantKeys(schema);
+  }
 };
 
 const removePrefix = (str: string, prefix: string) =>
   prefix ? (prefix.endsWith('_') ? replace(str, prefix, '') : replace(str, `${prefix}_`, '')) : str;
+
+const removePrefixes = <TSchema extends BaseSchema, TPrefixRemoval extends string>(
+  schema: TSchema,
+  prefix: TPrefixRemoval,
+) => {
+  if (prefix) {
+    return deepTransformKeys(schema, str => removePrefix(str, prefix));
+  }
+  return schema;
+};
 
 export const typeEnvironment = <
   TSchema extends BaseSchema,
   TTransform extends NamingConvention = 'default',
   TPrefixRemoval extends string = '',
 >(
-  schema: z.Schema<TSchema>,
+  schema: Schema<TSchema>,
   {
     transform = 'default' as TTransform,
     formatErrorFn = formatError,
@@ -53,27 +63,10 @@ export const typeEnvironment = <
 ) => {
   try {
     const parsed = schema.parse(overrideEnv);
-    const prefixRemoved = deepTransformKeys(parsed, str => removePrefix(str, excludePrefix)) as {
-      [key in keyof TSchema as key extends string ? Replace<key, TPrefixRemoval, ''> : never]: TSchema[key];
-    };
-    type PrefixRemoved = typeof prefixRemoved;
-    const transformers = {
-      camelcase: deepCamelKeys<PrefixRemoved>,
-      pascalcase: deepPascalKeys<PrefixRemoved>,
-      kebabcase: deepKebabKeys<PrefixRemoved>,
-      default: (obj: PrefixRemoved) => obj,
-    };
-
-    const transformFn = transformers[transform];
-    return transformFn(prefixRemoved) as TTransform extends 'camelcase'
-      ? DeepCamelKeys<PrefixRemoved>
-      : TTransform extends 'pascalcase'
-      ? DeepPascalKeys<PrefixRemoved>
-      : TTransform extends 'kebabcase'
-      ? DeepKebabKeys<PrefixRemoved>
-      : PrefixRemoved;
+    const prefixRemoved = removePrefixes(parsed, excludePrefix) as PrefixRemoved<TSchema, TPrefixRemoval>;
+    return changeCase(transform, prefixRemoved) as ConditionalType<TTransform, typeof prefixRemoved>;
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       throw new Error(formatErrorFn(error));
     }
     throw new Error('Environment variable validation failed');
