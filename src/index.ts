@@ -1,11 +1,13 @@
-import { ZodTypeAny, ZodError } from 'zod';
+import { ZodTypeAny, ZodError, ZodIssue } from 'zod';
 import { replace, camelKeys, pascalKeys, kebabKeys, constantKeys, Replace } from 'string-ts';
 import { ConditionalType, NamingConvention, Options, PrefixRemoved } from './contracts';
 
-const formatError = (error: ZodError) =>
-  `Environment variable validation failed:${error.issues
-    .map(issue => `\n\t'${issue.path.join(',')}': ${issue.message}`)
-    .join(',')}`;
+const constructError = (issues: ZodIssue[]) =>
+  new Error(
+    `Environment variable validation failed:${issues
+      .map(issue => `\n\t'${issue.path.join(',')}': ${issue.message}`)
+      .join(',')}`,
+  );
 
 const getEnvironment = () => {
   if ((import.meta as any)?.env !== undefined) {
@@ -63,7 +65,11 @@ export const typeEnvironment = <
   options: Options<TTransform, TPrefixRemoval> = {},
   overrideEnv: Record<string, string | undefined> = getEnvironment(),
 ) => {
-  const { transform = 'default', formatErrorFn = formatError, excludePrefix = '' as TPrefixRemoval } = options;
+  const {
+    transform = 'default',
+    constructErrorFn: constructErrorFn = constructError,
+    excludePrefix = '' as TPrefixRemoval,
+  } = options;
 
   try {
     const parsed = schema.parse(overrideEnv);
@@ -71,8 +77,9 @@ export const typeEnvironment = <
     const prefixRemoved = removePrefix(parsed, excludePrefix) as PrefixRemoved<TSchemaOutput, TPrefixRemoval>;
     return changeCase(transform, prefixRemoved) as ConditionalType<TTransform, typeof prefixRemoved>;
   } catch (error) {
-    if (error instanceof ZodError) {
-      throw new Error(formatErrorFn ? formatErrorFn(error) : formatError(error));
+    const zodErrors = (error as ZodError)?.issues || (error as ZodError)?.errors || [];
+    if (zodErrors.length > 0) {
+      throw constructErrorFn ? constructErrorFn(zodErrors) : constructError(zodErrors);
     }
     throw new Error('Environment variable validation failed');
   }

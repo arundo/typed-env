@@ -1,11 +1,11 @@
-import { ZodError } from 'zod';
+import { ZodIssue } from 'zod';
 import { Replace, CamelKeys, ConstantKeys, KebabKeys, PascalKeys } from 'string-ts';
 
 export type NamingConvention = 'camelcase' | 'pascalcase' | 'kebabcase' | 'constantcase' | 'default';
 
 export type Options<TTransform, TPrefixRemoval> = {
   transform?: TTransform;
-  formatErrorFn?: (error: ZodError) => string;
+  constructErrorFn?: (issues: ZodIssue[]) => Error;
   excludePrefix?: TPrefixRemoval;
 };
 
