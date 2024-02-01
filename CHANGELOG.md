@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.2.0
+
+### Minor Changes
+
+- 959f459: change how formatting errors is done
+
 ## 0.1.0
 
 ### Minor Changes
