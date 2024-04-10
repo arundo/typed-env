@@ -56,14 +56,14 @@ const changeCase = <TTransform extends NamingConvention | undefined, TSchema>(
 ) => {
   switch (transform) {
     case 'camelcase':
-      return camelKeys<TSchema>(schema) as Readonly<CamelKeys<TSchema>>;
+      return camelKeys(schema) as Readonly<CamelKeys<TSchema>>;
     case 'pascalcase':
-      return pascalKeys<TSchema>(schema) as Readonly<PascalKeys<TSchema>>;
+      return pascalKeys(schema) as Readonly<PascalKeys<TSchema>>;
     case 'kebabcase':
-      return kebabKeys<TSchema>(schema) as Readonly<KebabKeys<TSchema>>;
+      return kebabKeys(schema) as Readonly<KebabKeys<TSchema>>;
     case 'constantcase':
     default:
-      return constantKeys<TSchema>(schema) as Readonly<ConstantKeys<TSchema>>;
+      return constantKeys(schema) as Readonly<ConstantKeys<TSchema>>;
   }
 };
 
