@@ -1,5 +1,16 @@
 import { ZodTypeAny, ZodError, ZodIssue } from 'zod';
-import { replace, camelKeys, pascalKeys, kebabKeys, constantKeys, Replace } from 'string-ts';
+import {
+  replace,
+  camelKeys,
+  pascalKeys,
+  kebabKeys,
+  constantKeys,
+  Replace,
+  CamelKeys,
+  PascalKeys,
+  KebabKeys,
+  ConstantKeys,
+} from 'string-ts';
 import { ConditionalType, NamingConvention, Options, PrefixRemoved } from './contracts';
 
 const constructError = (issues: ZodIssue[]) =>
@@ -45,14 +56,14 @@ const changeCase = <TTransform extends NamingConvention | undefined, TSchema>(
 ) => {
   switch (transform) {
     case 'camelcase':
-      return camelKeys(schema);
+      return camelKeys(schema) as Readonly<CamelKeys<TSchema>>;
     case 'pascalcase':
-      return pascalKeys(schema);
+      return pascalKeys(schema) as Readonly<PascalKeys<TSchema>>;
     case 'kebabcase':
-      return kebabKeys(schema);
+      return kebabKeys(schema) as Readonly<KebabKeys<TSchema>>;
     case 'constantcase':
     default:
-      return constantKeys(schema);
+      return constantKeys(schema) as Readonly<ConstantKeys<TSchema>>;
   }
 };
 
@@ -75,7 +86,10 @@ export const typeEnvironment = <
     const parsed = schema.parse(overrideEnv);
     type TSchemaOutput = TSchema['_output'];
     const prefixRemoved = removePrefix(parsed, excludePrefix) as PrefixRemoved<TSchemaOutput, TPrefixRemoval>;
-    return changeCase(transform, prefixRemoved) as ConditionalType<TTransform, typeof prefixRemoved>;
+    return changeCase(transform, prefixRemoved) as ConditionalType<
+      TTransform,
+      PrefixRemoved<TSchemaOutput, TPrefixRemoval>
+    >;
   } catch (error) {
     const zodErrors = (error as ZodError)?.issues || (error as ZodError)?.errors || [];
     if (zodErrors.length > 0) {
