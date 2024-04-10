@@ -27,7 +27,7 @@ import { typeEnvironment } from '@arundo/typed-env';
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['test', 'development', 'production']),
-  PORT: z.coerse.number().int().default(3000),
+  PORT: z.coerce.number().int().default(3000),
 });
 
 export const environment = typeEnvironment(envSchema);
@@ -69,7 +69,7 @@ import { z } from 'zod';
 import { typeEnvironment } from '@arundo/typed-env';
 
 export const envSchema = z.object({
-  PORT: z.coerse.number().int().default(3000),
+  PORT: z.coerce.number().int().default(3000),
 });
 
 export const environment = typeEnvironment(envSchema, { transform: 'camelcase' });
