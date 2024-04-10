@@ -9,16 +9,16 @@ export type Options<TTransform, TPrefixRemoval> = {
   excludePrefix?: TPrefixRemoval;
 };
 
-export type ConditionalType<TTransform extends NamingConvention, TSchema> = 'default' extends TTransform
-  ? TSchema
+export type ConditionalType<TTransform extends NamingConvention | undefined, TSchema> = 'default' extends TTransform
+  ? Readonly<TSchema>
   : 'constantcase' extends TTransform
-  ? ConstantKeys<TSchema>
+  ? Readonly<ConstantKeys<TSchema>>
   : 'camelcase' extends TTransform
-  ? CamelKeys<TSchema>
+  ? Readonly<CamelKeys<TSchema>>
   : 'pascalcase' extends TTransform
-  ? PascalKeys<TSchema>
+  ? Readonly<PascalKeys<TSchema>>
   : 'kebabcase' extends TTransform
-  ? KebabKeys<TSchema>
+  ? Readonly<KebabKeys<TSchema>>
   : never;
 
 export type PrefixRemoved<TSchema, TPrefixRemoval extends string> = {
