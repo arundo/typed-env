@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.2.1
+
+### Patch Changes
+
+- afee333: make env readonly
+
 ## 0.2.0
 
 ### Minor Changes
