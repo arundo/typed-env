@@ -1,5 +1,11 @@
 # @arunod/typed-env
 
+## 0.3.0
+
+### Minor Changes
+
+- 6d2d2ab: add option to write back to original environment object
+
 ## 0.2.1
 
 ### Patch Changes
