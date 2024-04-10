@@ -7,6 +7,7 @@ export type Options<TTransform, TPrefixRemoval> = {
   transform?: TTransform;
   constructErrorFn?: (issues: ZodIssue[]) => Error;
   excludePrefix?: TPrefixRemoval;
+  writeBackToEnv?: boolean;
 };
 
 export type ConditionalType<TTransform extends NamingConvention | undefined, TSchema> = 'default' extends TTransform

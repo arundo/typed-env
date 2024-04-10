@@ -80,10 +80,16 @@ export const typeEnvironment = <
     transform = 'default',
     constructErrorFn: constructErrorFn = constructError,
     excludePrefix = '' as TPrefixRemoval,
+    writeBackToEnv = false,
   } = options;
 
   try {
     const parsed = schema.parse(overrideEnv);
+    if (writeBackToEnv) {
+      for (const key of Object.keys(parsed)) {
+        overrideEnv[key] = typeof parsed[key] === 'string' ? parsed[key] : JSON.stringify(parsed[key]);
+      }
+    }
     type TSchemaOutput = TSchema['_output'];
     const prefixRemoved = removePrefix(parsed, excludePrefix) as PrefixRemoved<TSchemaOutput, TPrefixRemoval>;
     return changeCase(transform, prefixRemoved) as ConditionalType<
