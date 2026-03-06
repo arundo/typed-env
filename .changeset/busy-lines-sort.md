@@ -1,5 +1,5 @@
 ---
-'@arundo/typed-env': patch
+'@arundo/typed-env': major
 ---
 
 Replace deprecated Zod functions
