@@ -1,4 +1,4 @@
-import { ZodTypeAny, ZodError, ZodIssue } from 'zod';
+import { ZodType, ZodError } from 'zod';
 import {
   replace,
   camelKeys,
@@ -13,7 +13,9 @@ import {
 } from 'string-ts';
 import { ConditionalType, NamingConvention, Options, PrefixRemoved } from './contracts';
 
-const constructError = (issues: ZodIssue[]) =>
+type ZodIssueLike = ZodError['issues'][number];
+
+const constructError = (issues: ZodIssueLike[]) =>
   new Error(
     `Environment variable validation failed:${issues
       .map(issue => `\n\t'${issue.path.join(',')}': ${issue.message}`)
@@ -68,7 +70,7 @@ const changeCase = <TTransform extends NamingConvention | undefined, TSchema>(
 };
 
 export const typeEnvironment = <
-  TSchema extends ZodTypeAny,
+  TSchema extends ZodType<any, any, any>,
   TTransform extends NamingConvention,
   TPrefixRemoval extends string = '',
 >(
@@ -97,7 +99,7 @@ export const typeEnvironment = <
       PrefixRemoved<TSchemaOutput, TPrefixRemoval>
     >;
   } catch (error) {
-    const zodErrors = (error as ZodError)?.issues || (error as ZodError)?.errors || [];
+    const zodErrors = (error as ZodError)?.issues || (error as { errors?: ZodIssueLike[] })?.errors || [];
     if (zodErrors.length > 0) {
       throw constructErrorFn ? constructErrorFn(zodErrors) : constructError(zodErrors);
     }

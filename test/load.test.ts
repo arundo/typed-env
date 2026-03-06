@@ -91,7 +91,5 @@ test('validation failed', () => {
       undefined,
       overrideEnv,
     ),
-  ).toThrow(
-    "Environment variable validation failed:\n\t'HOST': Expected number, received string,\n\t'KRØLL': Required,\n\t'BALL': Required",
-  );
+  ).toThrow(/Environment variable validation failed:\n\t'HOST': .*\n\t'KRØLL': .*\n\t'BALL': .*/);
 });
